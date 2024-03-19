@@ -1,5 +1,5 @@
 function Home() {
-  return <h1>Isabela, eu te amo e você é o amor da minha vida.</h1>;
+  return <h1>Página em construção &#127947;</h1>;
 }
 
 export default Home;
