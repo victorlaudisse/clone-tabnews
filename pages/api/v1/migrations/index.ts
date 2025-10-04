@@ -1,11 +1,21 @@
+import { createRouter } from "next-connect";
 import { runner as migrationRunner, RunnerOption } from "node-pg-migrate";
 import { resolve } from "node:path";
 import database from "infra/database";
+import { NextApiRequest, NextApiResponse } from "next";
+import controller from "@/infra/controller";
 
-function getMigrationOptions(dbClient, liveRun) {
+const router = createRouter();
+
+router.get(getHandler);
+router.post(postHandler);
+
+export default router.handler(controller.errorHandlers);
+
+function getMigrationOptions(dbClient, dryRun) {
   const options: RunnerOption = {
     dbClient: dbClient,
-    dryRun: !liveRun,
+    dryRun: !dryRun,
     dir: resolve("infra", "migrations"),
     direction: "up",
     verbose: true,
@@ -14,24 +24,29 @@ function getMigrationOptions(dbClient, liveRun) {
   return options;
 }
 
-export default async function migrations(request, response) {
-  const allowedMethods = ["GET", "POST"];
-  if (!allowedMethods.includes(request.method)) {
-    return response.status(405).json({
-      error: `Method "${request.method}" not allowed`,
-    });
-  }
+async function getHandler(request: NextApiRequest, response: NextApiResponse) {
   let dbClient;
   try {
     dbClient = await database.getNewClient();
-    const liveRun = request.method === "POST" ? true : false;
+    const liveRun = false;
     const options = getMigrationOptions(dbClient, liveRun);
     const migrations = await migrationRunner(options);
     const status = liveRun && migrations.length > 0 ? 201 : 200;
     return response.status(status).json(migrations);
-  } catch (error) {
-    console.error(error);
-    throw error;
+  } finally {
+    await dbClient?.end();
+  }
+}
+
+async function postHandler(request: NextApiRequest, response: NextApiResponse) {
+  let dbClient;
+  try {
+    dbClient = await database.getNewClient();
+    const liveRun = true;
+    const options = getMigrationOptions(dbClient, liveRun);
+    const migrations = await migrationRunner(options);
+    const status = liveRun && migrations.length > 0 ? 201 : 200;
+    return response.status(status).json(migrations);
   } finally {
     await dbClient.end();
   }
