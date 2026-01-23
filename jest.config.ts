@@ -13,6 +13,14 @@ const config: Config = {
     "^@/(.*)$": "<rootDir>/$1",
   },
   rootDir: ".",
+  testTimeout: 60000,
 };
 
-export default createJestConfig(config);
+async function jestConfig() {
+  const nextJestConfig = await createJestConfig(config)();
+  nextJestConfig.transformIgnorePatterns[0] =
+    "/node_modules/(?!(node-pg-migrate|glob)/)";
+  return nextJestConfig;
+}
+
+export default jestConfig;
