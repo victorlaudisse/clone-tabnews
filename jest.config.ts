@@ -19,7 +19,7 @@ const config: Config = {
 async function jestConfig() {
   const nextJestConfig = await createJestConfig(config)();
   nextJestConfig.transformIgnorePatterns[0] =
-    "/node_modules/(?!(node-pg-migrate|glob)/)";
+    "/node_modules/(?!(node-pg-migrate|glob|uuid)/)";
   return nextJestConfig;
 }
 
