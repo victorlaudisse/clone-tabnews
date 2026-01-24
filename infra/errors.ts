@@ -44,6 +44,37 @@ export class ServiceError extends Error {
   }
 }
 
+export class ValidationError extends Error {
+  readonly action: string;
+  readonly statusCode: number;
+
+  constructor({
+    cause,
+    message,
+    action,
+  }: {
+    cause?: any;
+    message: string;
+    action: string;
+  }) {
+    super(message || "Um erro de validação ocorreu.", {
+      cause,
+    });
+    this.name = "ValidationError";
+    this.action = action || "Ajuste os dados enviados e tente novamente.";
+    this.statusCode = 400;
+  }
+
+  toJSON() {
+    return {
+      name: this.name,
+      message: this.message,
+      action: this.action,
+      status_code: this.statusCode,
+    };
+  }
+}
+
 export class MethodNotAllowedError extends Error {
   readonly action: string;
   readonly statusCode: number;
