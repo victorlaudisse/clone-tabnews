@@ -17,6 +17,7 @@ function getMigrationOptions({
     direction: "up",
     verbose: true,
     migrationsTable: "pgmigrations",
+    log: () => {},
   };
   return options;
 }

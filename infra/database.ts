@@ -1,7 +1,7 @@
-import { Client } from "pg";
+import { Client, QueryConfig, QueryResult } from "pg";
 import { ServiceError } from "./errors";
 
-async function query(queryObject) {
+async function query(queryObject: string | QueryConfig): Promise<QueryResult> {
   let client;
   try {
     client = await getNewClient();

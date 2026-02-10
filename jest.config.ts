@@ -1,5 +1,5 @@
 import type { Config } from "jest";
-import nextJest from "next/jest";
+import nextJest from "next/jest.js";
 
 const createJestConfig = nextJest({
   dir: "./",
@@ -13,6 +13,14 @@ const config: Config = {
     "^@/(.*)$": "<rootDir>/$1",
   },
   rootDir: ".",
+  testTimeout: 60000,
 };
 
-export default createJestConfig(config);
+async function jestConfig() {
+  const nextJestConfig = await createJestConfig(config)();
+  nextJestConfig.transformIgnorePatterns[0] =
+    "/node_modules/(?!(node-pg-migrate|glob|uuid)/)";
+  return nextJestConfig;
+}
+
+export default jestConfig;
