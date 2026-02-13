@@ -1,4 +1,5 @@
 import database from "@/infra/database";
+import password from "@/models/password";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { User } from "@/pages/api/types/user";
 import { NotFoundError, ValidationError } from "@/infra/errors";
@@ -34,28 +35,10 @@ async function findOneByUsername(username: string): Promise<User> {
 async function create(userInputValues: CreateUserDto): Promise<User> {
   await validateUniqueEmail(userInputValues.email);
   await validateUniqueUsername(userInputValues.username);
+  await hashPasswordInObject(userInputValues);
+
   const newUser = await runInsertQuery(userInputValues);
   return newUser;
-
-  async function runInsertQuery(userInputValues: CreateUserDto) {
-    const result = await database.query({
-      text: `
-      INSERT INTO 
-        users (username, email, password)
-      VALUES 
-        ($1, $2, $3)
-      RETURNING 
-        *
-      ;
-    `,
-      values: [
-        userInputValues.username,
-        userInputValues.email,
-        userInputValues.password,
-      ],
-    });
-    return result.rows[0];
-  }
 
   async function validateUniqueEmail(email: string) {
     const result = await database.query({
@@ -95,6 +78,33 @@ async function create(userInputValues: CreateUserDto): Promise<User> {
         action: "Utilize outro username para realizar o cadastro.",
       });
     }
+  }
+
+  async function hashPasswordInObject(
+    object: { password: string } & { [key: string]: any },
+  ) {
+    const hashedPassword = await password.hash(object.password);
+    object.password = hashedPassword;
+  }
+
+  async function runInsertQuery(userInputValues: CreateUserDto) {
+    const result = await database.query({
+      text: `
+      INSERT INTO 
+        users (username, email, password)
+      VALUES 
+        ($1, $2, $3)
+      RETURNING 
+        *
+      ;
+    `,
+      values: [
+        userInputValues.username,
+        userInputValues.email,
+        userInputValues.password,
+      ],
+    });
+    return result.rows[0];
   }
 }
 
